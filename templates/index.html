@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DS Foto Editor Pro</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #d946ef;
+            --secondary: #f43f5e;
+            --accent: #3b82f6;
+            --dark: #0f172a;
+            --light: #f9fafb;
+            --white: #ffffff;
+            --gray: #6b7280;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.15), 0 3px 7px -3px rgba(0, 0, 0, 0.07);
+            --transition: all 0.3s ease;
+            --border-radius: 0.75rem;
+            --border-radius-sm: 0.375rem;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f2ff, #e0e7ff);
+            color: var(--dark);
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out, slideInDown 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+            from { transform: translateY(-50px); }
+            to { transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: pulse 2s infinite, tilt 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes tilt {
+            from { transform: rotate(-2deg); }
+            to { transform: rotate(2deg); }
+        }
+
+        .logo-text {
+            color: var(--dark);
+        }
+
+        .tagline {
+            font-size: 1.125rem;
+            color: var(--gray);
+            max-width: 650px;
+            margin: 0 auto;
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            flex: 1;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-0.5rem);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-card {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+            cursor: pointer;
+            border: 2px dashed var(--primary-light);
+            background-color: rgba(99, 102, 241, 0.05);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-card:hover {
+            border-color: var(--primary);
+            background-color: rgba(99, 102, 241, 0.1);
+            transform: translateY(-0.25rem);
+        }
+
+        .upload-card.dragover {
+            border-color: var(--accent);
+            background-color: rgba(59, 130, 246, 0.1);
+            animation: pulse 1.5s infinite;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .upload-card:hover .upload-icon {
+            transform: scale(1.1);
+            color: var(--primary-light);
+        }
+
+        .upload-title {
+            font-size: 1.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--dark);
+        }
+
+        .upload-subtitle {
+            color: var(--gray);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .select-file-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2.25rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background-color: var(--primary);
+            color: var(--white);
+            box-shadow: 0 5px 9px -1px rgba(0, 0, 0, 0.1), 0 3px 5px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .select-file-button:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-0.25rem);
+            box-shadow: 0 7px 12px -1px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .editor-card {
+            display: none;
+        }
+
+        .editor-card.active {
+            display: block;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(2rem); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .preview-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: var(--white);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px #e0e0e0, var(--shadow);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        #photoCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #photoCanvas:active {
+            cursor: grabbing;
+        }
+
+        .tools-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            background-color: var(--light);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: none;
+        }
+
+        .tool-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-0.25rem);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .tool-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .tool-btn span {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .zoom-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 0.5rem;
+            border-radius: 0.75rem;
+            background: #e5e7eb;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background: var(--primary);
+            transition: var(--transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .zoom-slider::-webkit-slider-thumb:hover,
+        .zoom-slider::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+            background: var(--primary-light);
+        }
+
+        .zoom-value {
+            min-width: 4rem;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .actions-panel {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .actions-panel button {
+            flex: 1;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions-card {
+            animation: fadeIn 1s ease-out, slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .instructions-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.35rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .instructions-title i {
+            font-size: 1.25rem;
+        }
+
+        .instructions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .instruction-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .instruction-icon {
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-top: 0.3rem;
+        }
+
+        .instruction-text {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--gray);
+        }
+
+        .specs-card {
+            background-color: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .specs-title {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .specs-title i {
+            font-size: 1.1rem;
+        }
+
+        .specs-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .spec-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--gray);
+        }
+
+        .spec-icon {
+            color: var(--primary-light);
+            font-size: 1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: var(--white);
+            backdrop-filter: blur(7px);
+        }
+
+        .loading-spinner {
+            width: 4rem;
+            height: 4rem;
+            border: 0.375rem solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.25rem;
+            margin-top: 1rem;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.7;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            gap: 0.3rem;
+        }
+
+        .loading-dots span {
+            animation: bounce 1.5s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-0.5rem); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .app-footer {
+            text-align: center;
+            margin-top: 3.5rem;
+            padding-top: 2.5rem;
+            color: var(--gray);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-section {
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .tools-panel {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .actions-panel {
+                flex-direction: column;
+            }
+
+            .actions-panel button {
+                flex: none;
+                width: 100%;
+                text-align: center;
+            }
+
+            .specs-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.75rem;
+            }
+
+            .upload-title {
+                font-size: 1.5rem;
+            }
+
+            .upload-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .tool-btn span {
+                font-size: 0.8rem;
+            }
+
+            .instructions-title {
+                font-size: 1.1rem;
+            }
+
+            .instruction-text {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Nuevos estilos para la configuración de API */
+        .api-settings-card {
+            background-color: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .api-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .api-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .api-input-group label {
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .api-input-group input {
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .api-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .api-help-text {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+
+        .api-help-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .api-help-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="logo">
+                <i class="fas fa-camera-retro logo-icon"></i>
+                <span class="logo-text">DS Foto Editor Pro</span>
+            </h1>
+            <p class="tagline">Crea fotos de identificación perfectas con eliminación de fondo inteligente</p>
+        </header>
+
+        <main class="main-content">
+            <section class="upload-section">
+                <div class="card upload-card" id="dropZone">
+                    <i class="fas fa-upload upload-icon"></i>
+                    <h2 class="upload-title">Arrastra tu foto aquí</h2>
+                    <p class="upload-subtitle">o haz clic para seleccionar un archivo (JPG, PNG, WEBP)</p>
+                    <button class="select-file-button">
+                        <i class="fas fa-folder-open"></i> Seleccionar archivo
+                    </button>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <div class="card instructions-card">
+                    <h3 class="instructions-title">
+                        <i class="fas fa-lightbulb"></i> Cómo funciona
+                    </h3>
+                    <div class="instructions-list">
+                        <div class="instruction-item">
+                            <i class="fas fa-upload instruction-icon"></i>
+                            <p class="instruction-text">Sube tu foto. Asegúrate de que la cara sea visible y la iluminación sea buena.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-robot instruction-icon"></i>
+                            <p class="instruction-text">Nuestra IA eliminará el fondo automáticamente con precisión profesional.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-crop-alt instruction-icon"></i>
+                            <p class="instruction-text">Recorta y ajusta la foto al tamaño 2x2 pulgadas con nuestras herramientas.</p>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-download instruction-icon"></i>
+                            <p class="instruction-text">Descarga tu foto lista para imprimir en alta calidad.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card specs-card">
+                    <h3 class="specs-title">
+                        <i class="fas fa-file-text"></i> Especificaciones de la foto
+                    </h3>
+                    <div class="specs-list">
+                        <div class="spec-item">
+                            <i class="fas fa-check-circle spec-icon"></i>
+                            <span>Tamaño: 2x2 pulgadas (600x600 píxeles)</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-check-circle spec-icon"></i>
+                            <span>Formato: PNG de alta calidad (transparente o fondo blanco)</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-check-circle spec-icon"></i>
+                            <span>Resolución: 300 DPI (ideal para impresión)</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-check-circle spec-icon"></i>
+                            <span>Procesamiento con IA profesional</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <div class="card editor-card" id="editorContainer">
+                    <div class="preview-container">
+                        <canvas id="photoCanvas"></canvas>
+                    </div>
+
+                    <div class="tools-panel">
+                        <button class="tool-btn" id="cropBtn">
+                            <i class="fas fa-crop-alt"></i>
+                            <span>Recortar</span>
+                        </button>
+                        <button class="tool-btn" id="centerBtn">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            <span>Centrar</span>
+                        </button>
+                        <button class="tool-btn" id="rotateBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Rotar</span>
+                        </button>
+                        <button class="tool-btn" id="zoomInBtn">
+                            <i class="fas fa-search-plus"></i>
+                            <span>Acercar</span>
+                        </button>
+                        <button class="tool-btn" id="zoomOutBtn">
+                            <i class="fas fa-search-minus"></i>
+                            <span>Alejar</span>
+                        </button>
+                        <button class="tool-btn" id="resetBtn">
+                            <i class="fas fa-undo-alt"></i>
+                            <span>Resetear</span>
+                        </button>
+                    </div>
+
+                    <div class="zoom-controls">
+                        <i class="fas fa-search-minus" style="color: var(--gray);"></i>
+                        <input type="range" min="10" max="200" value="100" class="zoom-slider" id="zoomSlider">
+                        <i class="fas fa-search-plus" style="color: var(--gray);"></i>
+                        <span class="zoom-value" id="zoomValue">100%</span>
+                    </div>
+
+                    <div class="actions-panel">
+                        <button class="select-file-button" id="downloadBtn">
+                            <i class="fas fa-download"></i> Descargar Foto
+                        </button>
+                        <button class="select-file-button" id="newPhotoBtn">
+                            <i class="fas fa-plus"></i> Subir Nueva Foto
+                        </button>
+                        <button class="select-file-button" id="toggleBgBtn" style="background-color: var(--success);">
+                            <i class="fas fa-layer-group"></i> Alternar Fondo
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>© 2023 DS Foto Editor Pro. Usa tecnología de IA profesional para resultados perfectos.</p>
+        </footer>
+    </div>
+
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Procesando tu foto con IA<span class="loading-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const editorContainer = document.getElementById('editorContainer');
+            const photoCanvas = document.getElementById('photoCanvas');
+            const ctx = photoCanvas.getContext('2d');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const newPhotoBtn = document.getElementById('newPhotoBtn');
+            const cropBtn = document.getElementById('cropBtn');
+            const centerBtn = document.getElementById('centerBtn');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const rotateBtn = document.getElementById('rotateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const zoomSlider = document.getElementById('zoomSlider');
+            const zoomValue = document.getElementById('zoomValue');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const toggleBgBtn = document.getElementById('toggleBgBtn');
+
+            // Variables de estado
+            let currentImage = null;
+            let scale = 1;
+            let rotation = 0;
+            let offsetX = 0;
+            let offsetY = 0;
+            let isDragging = false;
+            let startX, startY;
+            let canvasWidth, canvasHeight;
+            let cropping = false;
+            let cropStartX, cropStartY;
+            let cropWidth, cropHeight;
+            let whiteBackground = false;
+            let imageLoaded = false;
+
+            // Tamaño del formato 2x2 en píxeles (600x600 para 300 DPI)
+            const FORMAT_WIDTH = 600;
+            const FORMAT_HEIGHT = 600;
+
+            // Inicializar canvas
+            function initCanvas() {
+                const container = document.querySelector('.preview-container');
+                canvasWidth = container.clientWidth;
+                canvasHeight = container.clientHeight;
+
+                photoCanvas.width = canvasWidth;
+                photoCanvas.height = canvasHeight;
+
+                // Dibujar fondo blanco inicial
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            }
+
+            // Event listeners
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect({ target: fileInput });
+                }
+            });
+
+            // Botones de control
+            downloadBtn.addEventListener('click', downloadImage);
+            newPhotoBtn.addEventListener('click', resetEditor);
+            cropBtn.addEventListener('click', toggleCrop);
+            centerBtn.addEventListener('click', centerImage);
+            zoomInBtn.addEventListener('click', () => zoomImage(1.1));
+            zoomOutBtn.addEventListener('click', () => zoomImage(0.9));
+            rotateBtn.addEventListener('click', rotateImage);
+            resetBtn.addEventListener('click', resetImage);
+            zoomSlider.addEventListener('input', handleZoomSlider);
+            toggleBgBtn.addEventListener('click', toggleBackground);
+
+            // Eventos para arrastrar la imagen y hacer cropping
+            photoCanvas.addEventListener('mousedown', startDrag);
+            photoCanvas.addEventListener('mousemove', dragOrCrop);
+            photoCanvas.addEventListener('mouseup', endDragOrCrop);
+            photoCanvas.addEventListener('mouseleave', endDragOrCrop);
+
+            photoCanvas.addEventListener('touchstart', handleTouchStart);
+            photoCanvas.addEventListener('touchmove', handleTouchMove);
+            photoCanvas.addEventListener('touchend', endDragOrCrop);
+
+            // Inicializar al cargar
+            window.addEventListener('load', initCanvas);
+            window.addEventListener('resize', initCanvas);
+
+            // Función para manejar la selección de archivos
+            async function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) {
+        showAlert("Por favor selecciona un archivo de imagen válido.");
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!data.url) {
+            showAlert(data.error || "Error inesperado al procesar la imagen.");
+            showLoading(false);
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = async function () {
+    try {
+        await ensureFaceModels();
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const detection = await faceapi
+            .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks(true);
+
+        if (detection) {
+            const box = detection.detection.box;
+            const margin = 1.8;
+            const cx = box.x + box.width / 2;
+            const cy = box.y + box.height / 2;
+
+            const cropWidth = box.width * margin;
+            const cropHeight = box.height * margin;
+
+            const sx = Math.max(0, cx - cropWidth / 2);
+            const sy = Math.max(0, cy - cropHeight / 2);
+            const sWidth = Math.min(cropWidth, img.width - sx);
+            const sHeight = Math.min(cropHeight, img.height - sy);
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = sWidth;
+            tempCanvas.height = sHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
+            const resultImg = new Image();
+            resultImg.onload = () => {
+                currentImage = resultImg;
+                imageLoaded = true;
+                processImage();
+                finalizeEditor();
+                window.dispatchEvent(new Event('resize')); // 👈 Recalcula layout
+            };
+            resultImg.src = tempCanvas.toDataURL();
+        } else {
+            console.warn("⚠️ No se detectó rostro. Usando imagen original.");
+            currentImage = img;
+            imageLoaded = true;
+            processImage();
+            finalizeEditor();
+            window.dispatchEvent(new Event('resize')); // 👈 Recalcula layout también aquí
+        }
+    } catch (faceError) {
+        console.error("❌ Error al detectar rostro:", faceError);
+        currentImage = img;
+        imageLoaded = true;
+        processImage();
+        finalizeEditor();
+        window.dispatchEvent(new Event('resize')); // 👈 Incluso en caso de error
+    }
+};
+
+        img.onerror = () => {
+            showAlert("❌ No se pudo cargar la imagen.");
+            showLoading(false);
+        };
+
+        img.src = data.url;
+
+    } catch (err) {
+        console.error("❌ Error general:", err);
+        showAlert('Error al procesar la imagen.');
+        showLoading(false);
+    }
+}
+
+
+            // Mostrar editor
+            function finalizeEditor() {
+                showLoading(false);
+                editorContainer.classList.add('active');
+                dropZone.classList.add('hidden');
+                editorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            async function removeBackground(img) {
+                const net = await bodyPix.load({
+                    architecture: 'MobileNetV1',
+                    outputStride: 16,
+                    multiplier: 0.75,
+                    quantBytes: 2
+                });
+
+                const segmentation = await net.segmentPerson(img, {
+                    internalResolution: 'high',
+                    segmentationThreshold: 0.9
+                });
+
+                const coloredPartImage = bodyPix.toMask(
+                    segmentation,
+                    { r: 255, g: 255, b: 255, a: 255 },  // persona blanca
+                    { r: 255, g: 255, b: 255, a: 0 }     // fondo transparente
+                );
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Rellenar fondo blanco
+                if (whiteBackground) {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+} else {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+}
+
+
+                await bodyPix.drawMask(
+                    tempCanvas, img, coloredPartImage,
+                    1, // opacity
+                    2, // blur
+                    false // flip
+                );
+
+                return new Promise(resolve => {
+                    const finalImg = new Image();
+                    finalImg.onload = () => resolve(finalImg);
+                    finalImg.src = tempCanvas.toDataURL();
+                });
+            }
+
+            function processImage() {
+    if (!imageLoaded || !currentImage) return;
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+if (whiteBackground) {
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+}
+
+
+    // Calcular relación de aspecto y dimensiones ajustadas
+    const imgAspect = currentImage.width / currentImage.height;
+    const canvasAspect = canvasWidth / canvasHeight;
+
+    let drawWidth, drawHeight;
+
+    if (imgAspect > canvasAspect) {
+        drawWidth = canvasWidth;
+        drawHeight = drawWidth / imgAspect;
+    } else {
+        drawHeight = canvasHeight;
+        drawWidth = drawHeight * imgAspect;
+    }
+
+    // Aplicar zoom
+    drawWidth *= scale;
+    drawHeight *= scale;
+
+    // Posicionamiento centrado + offset manual
+    const x = (canvasWidth - drawWidth) / 2 + offsetX;
+    const y = (canvasHeight - drawHeight) / 2 + offsetY;
+
+    ctx.save();
+
+    // Mover al centro para rotar correctamente
+    ctx.translate(canvasWidth / 2, canvasHeight / 2);
+    ctx.rotate(rotation * Math.PI / 180);
+    ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
+
+    // Dibujar imagen ajustada
+    ctx.drawImage(currentImage, x, y, drawWidth, drawHeight);
+
+    ctx.restore();
+
+    // Dibujar el rectángulo de recorte si está activado
+    if (cropping) {
+        ctx.strokeStyle = 'rgba(0, 0, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(
+            cropStartX,
+            cropStartY,
+            cropWidth,
+            cropHeight
+        );
+        ctx.setLineDash([]);
+    }
+}
+
+         
+
+            function downloadImage() {
+                if (!currentImage) return;
+
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = FORMAT_WIDTH;
+                exportCanvas.height = FORMAT_HEIGHT;
+                const exportCtx = exportCanvas.getContext('2d');
+
+                // Fondo blanco o transparente
+                if (whiteBackground) {
+                    exportCtx.fillStyle = 'white';
+                    exportCtx.fillRect(0, 0, FORMAT_WIDTH, FORMAT_HEIGHT);
+                }
+
+                const imgAspect = currentImage.width / currentImage.height;
+                let drawWidth, drawHeight;
+
+                if (imgAspect > 1) {
+                    drawHeight = FORMAT_HEIGHT;
+                    drawWidth = drawHeight * imgAspect;
+                } else {
+                    drawWidth = FORMAT_WIDTH;
+                    drawHeight = drawWidth / imgAspect;
+                }
+
+                drawWidth *= scale;
+                drawHeight *= scale;
+
+                exportCtx.save();
+                exportCtx.translate(FORMAT_WIDTH / 2, FORMAT_HEIGHT / 2);
+                exportCtx.rotate(rotation * Math.PI / 180);
+                exportCtx.drawImage(
+                    currentImage,
+                    -drawWidth / 2 + offsetX * (FORMAT_WIDTH / canvasWidth),
+                    -drawHeight / 2 + offsetY * (FORMAT_HEIGHT / canvasHeight),
+                    drawWidth,
+                    drawHeight
+                );
+                exportCtx.restore();
+
+                const link = document.createElement('a');
+                link.download = `foto-perfil-${new Date().getTime()}.png`;
+                link.href = exportCanvas.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Efecto de confeti al descargar
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#6366f1', '#f43f5e', '#3b82f6', '#d946ef'],
+                        disableForReducedMotion: true
+                    });
+                }, 100);
+            }
+
+            function resetEditor() {
+                currentImage = null;
+                scale = 1;
+                rotation = 0;
+                offsetX = 0;
+                offsetY = 0;
+                zoomSlider.value = 100;
+                zoomValue.textContent = '100%';
+                cropping = false;
+                cropBtn.classList.remove('active');
+                imageLoaded = false;
+
+                editorContainer.classList.remove('active');
+                dropZone.classList.remove('hidden');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                fileInput.value = '';
+                dropZone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function resetImage() {
+                if (!currentImage) return;
+
+                scale = 1;
+                rotation = 0;
+                offsetX = 0;
+                offsetY = 0;
+                zoomSlider.value = 100;
+                zoomValue.textContent = '100%';
+                cropping = false;
+                cropBtn.classList.remove('active');
+                processImage();
+            }
+
+            function toggleCrop() {
+                if (!currentImage) return;
+                cropping = !cropping;
+                cropBtn.classList.toggle('active', cropping);
+                if (!cropping) {
+                    offsetX = 0;
+                    offsetY = 0;
+                    scale = 1;
+                    zoomSlider.value = 100;
+                    zoomValue.textContent = '100%';
+                }
+                processImage();
+            }
+
+            function toggleBackground() {
+                whiteBackground = !whiteBackground;
+                toggleBgBtn.style.backgroundColor = whiteBackground ? 'var(--success)' : 'var(--accent)';
+                toggleBgBtn.innerHTML = whiteBackground ?
+                    '<i class="fas fa-layer-group"></i> Fondo Blanco' :
+                    '<i class="fas fa-layer-group"></i> Fondo Transparente';
+                processImage();
+            }
+
+            function centerImage() {
+                offsetX = 0;
+                offsetY = 0;
+                processImage();
+            }
+
+            function zoomImage(factor) {
+                scale *= factor;
+                scale = Math.max(0.1, Math.min(scale, 3));
+                zoomSlider.value = Math.round(scale * 100);
+                zoomValue.textContent = `${zoomSlider.value}%`;
+                processImage();
+            }
+
+            function handleZoomSlider() {
+                const newScale = parseInt(this.value) / 100;
+                if (newScale !== scale) {
+                    scale = newScale;
+                    zoomValue.textContent = `${this.value}%`;
+                    processImage();
+                }
+            }
+
+            function rotateImage() {
+                rotation += 90;
+                if (rotation >= 360) rotation = 0;
+                processImage();
+            }
+
+            function startDrag(e) {
+                if (!currentImage) return;
+                e.preventDefault();
+                isDragging = true;
+                startX = e.clientX || e.touches[0].clientX;
+                startY = e.clientY || e.touches[0].clientY;
+                photoCanvas.style.cursor = 'grabbing';
+                if (cropping) {
+                    cropStartX = startX;
+                    cropStartY = startY;
+                    cropWidth = 0;
+                    cropHeight = 0;
+                }
+            }
+
+            function dragOrCrop(e) {
+                if (!currentImage) return;
+                e.preventDefault();
+
+                const currentX = e.clientX || e.touches[0].clientX;
+                const currentY = e.clientY || e.touches[0].clientY;
+
+                if (isDragging && !cropping) {
+                    offsetX += (currentX - startX) / scale;
+                    offsetY += (currentY - startY) / scale;
+                    startX = currentX;
+                    startY = currentY;
+                    processImage();
+                } else if (isDragging && cropping) {
+                    cropWidth = currentX - cropStartX;
+                    cropHeight = currentY - cropStartY;
+                    processImage();
+                }
+            }
+
+            function endDragOrCrop(e) {
+                if (!currentImage) return;
+                e.preventDefault();
+                isDragging = false;
+                photoCanvas.style.cursor = 'grab';
+                if (cropping) {
+                    let tempCanvas = document.createElement('canvas');
+                    let tempCtx = tempCanvas.getContext('2d');
+                    tempCanvas.width = FORMAT_WIDTH;
+                    tempCanvas.height = FORMAT_HEIGHT;
+
+                    // Asegúrate de que las dimensiones de recorte sean positivas
+                    const absCropWidth = Math.abs(cropWidth);
+                    const absCropHeight = Math.abs(cropHeight);
+
+                    // Calcula las coordenadas de inicio del recorte
+                    let sourceX = cropStartX;
+                    let sourceY = cropStartY;
+
+                    if (cropWidth < 0) {
+                        sourceX = cropStartX + cropWidth;
+                    }
+                    if (cropHeight < 0) {
+                        sourceY = cropStartY + cropHeight;
+                    }
+                    sourceX = sourceX / scale;
+                    sourceY = sourceY / scale;
+
+                    tempCtx.drawImage(
+                        currentImage,
+                        sourceX * (FORMAT_WIDTH / canvasWidth),
+                        sourceY * (FORMAT_HEIGHT / canvasHeight),
+                        absCropWidth / scale * (FORMAT_WIDTH / canvasWidth),
+                        absCropHeight / scale * (FORMAT_HEIGHT / canvasHeight),
+                        0,
+                        0,
+                        FORMAT_WIDTH,
+                        FORMAT_HEIGHT
+                    );
+
+                    const croppedImage = new Image();
+                    croppedImage.onload = () => {
+                        currentImage = croppedImage;
+                        scale = 1;
+                        offsetX = 0;
+                        offsetY = 0;
+                        rotation = 0;
+                        cropping = false;
+                        cropBtn.classList.remove('active');
+                        processImage();
+                    };
+                    croppedImage.src = tempCanvas.toDataURL();
+                }
+            }
+
+            function handleTouchStart(e) {
+                if (e.touches.length === 1 && currentImage) {
+                    startDrag(e);
+                }
+            }
+
+            function handleTouchMove(e) {
+                if (e.touches.length === 1 && isDragging && currentImage) {
+                    dragOrCrop(e);
+                }
+            }
+
+            function showLoading(show) {
+                if (show) {
+                    loadingOverlay.classList.remove('hidden');
+                } else {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+
+            function showAlert(message) {
+                alert(message);
+            }
+        });
+    </script>
+</body>
+</html>

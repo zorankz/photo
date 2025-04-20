@@ -1,0 +1,11 @@
+Flask>=2.0
+rembg[gpu]>=2.0.50 # Or rembg[cpu] if you don't have a compatible GPU/CUDA
+# Or just 'rembg' for basic CPU support
+Werkzeug>=2.0
+onnxruntime>=1.15.0 # Or onnxruntime-gpu if using GPU
+numpy>=1.20
+Pillow>=9.0
+scikit-image>=0.19 # Often needed for alpha matting
+pooch>=1.6
+
+# Add any other specific dependencies if needed
