@@ -212,6 +212,5 @@ def serve_result(filename):
 # --- Run Application ---
 if __name__ == '__main__':
     import os
-port = int(os.environ.get("PORT", 10000))
-app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
- # Use debug=False in production
+    port = int(os.environ.get("PORT", 10000))
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
